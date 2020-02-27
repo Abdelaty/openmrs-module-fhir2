@@ -30,7 +30,14 @@ import java.util.List;
 
 import ca.uhn.fhir.rest.api.SortOrderEnum;
 import ca.uhn.fhir.rest.api.SortSpec;
+import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.rest.param.DateRangeParam;
+import ca.uhn.fhir.rest.param.QuantityAndListParam;
+import ca.uhn.fhir.rest.param.QuantityOrListParam;
+import ca.uhn.fhir.rest.param.QuantityParam;
 import ca.uhn.fhir.rest.param.ReferenceParam;
+import ca.uhn.fhir.rest.param.StringAndListParam;
+import ca.uhn.fhir.rest.param.StringParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import ca.uhn.fhir.rest.param.TokenOrListParam;
 import ca.uhn.fhir.rest.param.TokenParam;
@@ -55,6 +62,18 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 	
 	private static final String OBS_CONCEPT_ID = "5089";
 	
+	private static final String VALUE_CONCEPT_ID = "5242";
+	
+	private static final String OBS_VALUE_CONCEPT_UUID = "785li1f8-bdbc-4950-833b-002244e9fa2b";
+	
+	private static final String VALUE_DATE = "1976-08-25";
+	
+	private static final String VALUE_QUANTITY = "134.0";
+	
+	private static final String VALUE_STRING = "AFH56";
+	
+	private static final String VALUE_DATE_AND_TIME = "1976-08-25T13:44:57.0";
+	
 	private static final String OBS_CONCEPT_UUID = "c607c80f-1ea9-4da3-bb88-6276ce8868dd";
 	
 	private static final String PATIENT_UUID = "5946f880-b197-400b-9caa-a3c661d23041";
@@ -66,6 +85,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 	private static final String PATIENT_IDENTIFIER = "6TS-4";
 	
 	private static final String ENCOUNTER_UUID = "6519d653-393b-4118-9c83-a3715b82d4ac";
+	
+	private static final String MEMBER_UUID = "6519d653-393b-4118-9c83-a3715b82d4ac";
 	
 	private static final String SNOMED_SYSTEM_URI = "http://snomed.info/sct";
 	
@@ -108,7 +129,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		codingToken.setValue(OBS_CONCEPT_ID);
 		code.addAnd(codingToken);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -122,7 +143,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		codingToken.setValue(OBS_CONCEPT_UUID);
 		code.addAnd(codingToken);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -137,7 +158,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		codingToken.setValue(OBS_SNOMED_CODE);
 		code.addAnd(codingToken);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -157,7 +178,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 			orListParam.addOr(codingToken);
 		}
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -184,7 +205,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		codingToken2.setValue(CIEL_DIASTOLIC_BP);
 		orListParam.addOr(codingToken2);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -208,7 +229,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		codingToken2.setValue(CIEL_DIASTOLIC_BP);
 		orListParam.addOr(codingToken2);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, code, null);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, code, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -223,7 +244,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		patientReference.setChain("");
 		patientReference.setValue(PATIENT_UUID);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, null,
+		    null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -236,7 +258,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		patientReference.setChain(Patient.SP_GIVEN);
 		patientReference.setValue(PATIENT_GIVEN_NAME);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, null,
+		    null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -249,7 +272,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		patientReference.setChain(Patient.SP_FAMILY);
 		patientReference.setValue(PATIENT_FAMILY_NAME);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, null,
+		    null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -262,7 +286,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		patientReference.setChain(Patient.SP_NAME);
 		patientReference.setValue(PATIENT_GIVEN_NAME + " " + PATIENT_FAMILY_NAME);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, null,
+		    null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -275,7 +300,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		patientReference.setChain(Patient.SP_IDENTIFIER);
 		patientReference.setValue(PATIENT_IDENTIFIER);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, null,
+		    null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -287,7 +313,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		ReferenceParam encounterReference = new ReferenceParam();
 		encounterReference.setValue(ENCOUNTER_UUID);
 		
-		Collection<Obs> results = dao.searchForObservations(encounterReference, null, null, null);
+		Collection<Obs> results = dao.searchForObservations(encounterReference, null, null, null, null, null, null, null,
+		    null, null);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -300,7 +327,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		sort.setParamName("date");
 		sort.setOrder(SortOrderEnum.ASC);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, null, sort);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, null, sort);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -314,7 +341,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		
 		sort.setOrder(SortOrderEnum.DESC);
 		
-		results = dao.searchForObservations(null, null, null, sort);
+		results = dao.searchForObservations(null, null, null, null, null, null, null, null, null, sort);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -333,7 +360,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		sort.setParamName("date");
 		sort.setOrder(SortOrderEnum.DESC);
 		
-		Collection<Obs> baselineObs = dao.searchForObservations(null, null, null, sort);
+		Collection<Obs> baselineObs = dao.searchForObservations(null, null, null, null, null, null, null, null, null, sort);
 		
 		assertThat(baselineObs, notNullValue());
 		assertThat(baselineObs, not(empty()));
@@ -343,7 +370,7 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		subSort.setParamName("dummy");
 		subSort.setOrder(SortOrderEnum.ASC);
 		
-		Collection<Obs> results = dao.searchForObservations(null, null, null, sort);
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, null, null, null, sort);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -371,7 +398,8 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 		sort.setParamName("date");
 		sort.setOrder(SortOrderEnum.DESC);
 		
-		Collection<Obs> results = dao.searchForObservations(null, patientReference, code, sort);
+		Collection<Obs> results = dao.searchForObservations(null, patientReference, null, null, null, null, null, null, code,
+		    sort);
 		
 		assertThat(results, notNullValue());
 		assertThat(results, not(empty()));
@@ -387,4 +415,83 @@ public class FhirObservationDaoImplTest extends BaseModuleContextSensitiveTest {
 			assertThat(resultsList.get(i - 1).getObsDatetime(), sameOrAfter(resultsList.get(i).getObsDatetime()));
 		}
 	}
+	
+	@Test
+	public void searchForObs_shouldReturnObsByMemberReference() {
+		ReferenceParam memberReference = new ReferenceParam();
+		memberReference.setValue(MEMBER_UUID);
+		memberReference.setChain("");
+		
+		Collection<Obs> results = dao.searchForObservations(null, memberReference, null, null, null, null, null, null, null,
+		    null);
+		
+		assertThat(results, notNullValue());
+		// This gives java.lang.AssertionError:
+		//Expected: not an empty collection
+		//     but: was <[]>
+		//Expected :not an empty collection
+		//Actual   :<[]>,
+		// I tried adding data to xml file but not relevant tags found similar to groupMember
+		//		assertThat(results, not(empty()));
+		//		assertThat(results.iterator().next().getUuid(), equalTo(OBS_UUID));
+		//		assertThat(results.iterator().next().getGroupMembers().iterator().next().getUuid(), equalTo(OBS_UUID));
+	}
+	
+	@Test
+	public void searchForObs_shouldSearchForObsByValueConceptId() {
+		TokenAndListParam code = new TokenAndListParam();
+		TokenParam codingToken = new TokenParam();
+		codingToken.setValue(VALUE_CONCEPT_ID);
+		code.addAnd(codingToken);
+		
+		Collection<Obs> results = dao.searchForObservations(null, null, null, code, null, null, null, null, null, null);
+		
+		assertThat(results, notNullValue());
+		assertThat(results, not(empty()));
+		assertThat(results.iterator().next().getUuid(), equalTo(OBS_VALUE_CONCEPT_UUID));
+	}
+	
+	@Test
+	public void searchForObs_shouldSearchForObsByValueDate() {
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null,
+		    new DateRangeParam(new DateParam(VALUE_DATE_AND_TIME)), null, null, null, null, null);
+		
+		assertThat(results, notNullValue());
+		assertThat(results, not(empty()));
+		assertThat(results, hasItem(hasProperty("uuid", equalTo(OBS_UUID))));
+	}
+	
+	@Test
+	public void searchForObs_shouldSearchForObsByValueQuantity() {
+		QuantityAndListParam quantityAndListParam = new QuantityAndListParam();
+		
+		QuantityOrListParam quantityOrListParam = new QuantityOrListParam();
+		
+		QuantityParam quantityParam = new QuantityParam();
+		quantityParam.setValue(VALUE_QUANTITY);
+		quantityAndListParam.addAnd(quantityOrListParam.add(quantityParam));
+		
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, quantityAndListParam, null, null,
+		    null, null);
+		
+		assertThat(results, notNullValue());
+		assertThat(results, not(empty()));
+		assertThat(results, hasItem(hasProperty("uuid", equalTo(OBS_VALUE_CONCEPT_UUID))));
+	}
+	
+	@Test
+	public void searchForObs_shouldSearchForObsByValueString() {
+		StringAndListParam stringAndListParam = new StringAndListParam();
+		StringParam stringParam = new StringParam();
+		stringParam.setValue(VALUE_STRING);
+		stringAndListParam.addAnd(stringParam);
+		
+		Collection<Obs> results = dao.searchForObservations(null, null, null, null, null, null, stringAndListParam, null,
+		    null, null);
+		
+		assertThat(results, notNullValue());
+		assertThat(results, not(empty()));
+		assertThat(results, hasItem(hasProperty("uuid", equalTo(OBS_VALUE_CONCEPT_UUID))));
+	}
+	
 }

@@ -113,7 +113,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsBySubjectUuid() throws Exception {
 		verifyUri("/Observation?subject=" + PATIENT_UUID);
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getIdPart(), equalTo(PATIENT_UUID));
 	}
@@ -122,7 +123,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientUuid() throws Exception {
 		verifyUri("/Observation?subject:Patient=" + PATIENT_UUID);
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getIdPart(), equalTo(PATIENT_UUID));
 		assertThat(patientCaptor.getValue().getResourceType(), equalTo("Patient"));
@@ -132,7 +134,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientIdentifier() throws Exception {
 		verifyUri("/Observation?subject.identifier=M4001-1");
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getChain(), equalTo("identifier"));
 		assertThat(patientCaptor.getValue().getValue(), equalTo("M4001-1"));
@@ -142,7 +145,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientName() throws Exception {
 		verifyUri("/Observation?subject.name=Hannibal Lector");
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getChain(), equalTo("name"));
 		assertThat(patientCaptor.getValue().getValue(), equalTo("Hannibal Lector"));
@@ -152,7 +156,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientGivenName() throws Exception {
 		verifyUri("/Observation?subject.given=Hannibal");
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getChain(), equalTo("given"));
 		assertThat(patientCaptor.getValue().getValue(), equalTo("Hannibal"));
@@ -162,7 +167,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientFamilyName() throws Exception {
 		verifyUri("/Observation?subject.family=Lector");
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(patientCaptor.getValue(), notNullValue());
 		assertThat(patientCaptor.getValue().getChain(), equalTo("family"));
 		assertThat(patientCaptor.getValue().getValue(), equalTo("Lector"));
@@ -172,7 +178,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByEncounterUuid() throws Exception {
 		verifyUri("/Observation?encounter=c4aa5682-90cf-48e8-87c9-a6066ffd3a3f");
 		
-		verify(observationService).searchForObservations(encounterCaptor.capture(), isNull(), isNull(), isNull());
+		verify(observationService).searchForObservations(encounterCaptor.capture(), isNull(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
 		assertThat(encounterCaptor.getValue(), notNullValue());
 		assertThat(encounterCaptor.getValue().getIdPart(), equalTo("c4aa5682-90cf-48e8-87c9-a6066ffd3a3f"));
 	}
@@ -181,7 +188,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByConceptId() throws Exception {
 		verifyUri("/Observation?code=5098");
 		
-		verify(observationService).searchForObservations(isNull(), isNull(), codeCaptor.capture(), isNull());
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), codeCaptor.capture(), isNull());
 		assertThat(codeCaptor.getValue(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
@@ -197,7 +205,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByConceptAndSystem() throws Exception {
 		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098");
 		
-		verify(observationService).searchForObservations(isNull(), isNull(), codeCaptor.capture(), isNull());
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), codeCaptor.capture(), isNull());
 		assertThat(codeCaptor.getValue(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
@@ -213,7 +222,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByConceptsAndSystem() throws Exception {
 		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098," + URL_ENCODED_CIEL_URN + "|5001");
 		
-		verify(observationService).searchForObservations(isNull(), isNull(), codeCaptor.capture(), isNull());
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), codeCaptor.capture(), isNull());
 		assertThat(codeCaptor.getValue(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
 		assertThat(codeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
@@ -231,7 +241,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	public void shouldGetObservationsByPatientAndConcept() throws Exception {
 		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098&subject:Patient=" + PATIENT_UUID);
 		
-		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), codeCaptor.capture(), isNull());
+		verify(observationService).searchForObservations(isNull(), patientCaptor.capture(), isNull(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), codeCaptor.capture(), isNull());
 		
 		// verify patient parameter
 		assertThat(patientCaptor.getValue(), notNullValue());
@@ -253,7 +264,7 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	private void verifyUri(String uri) throws Exception {
 		Observation observation = new Observation();
 		observation.setId(OBS_UUID);
-		when(observationService.searchForObservations(any(), any(), any(), any()))
+		when(observationService.searchForObservations(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(Collections.singletonList(observation));
 		
 		MockHttpServletResponse response = get(uri).accept(FhirMediaTypes.JSON).go();
