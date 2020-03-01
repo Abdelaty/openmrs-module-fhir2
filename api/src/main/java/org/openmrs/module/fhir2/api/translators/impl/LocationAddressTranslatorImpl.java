@@ -9,24 +9,38 @@
  */
 package org.openmrs.module.fhir2.api.translators.impl;
 
+import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hl7.fhir.r4.model.Address;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.StringType;
 import org.openmrs.Location;
+import org.openmrs.layout.address.AddressTemplate;
 import org.openmrs.module.fhir2.FhirConstants;
+import org.openmrs.module.fhir2.api.FhirGlobalPropertyService;
 import org.openmrs.module.fhir2.api.translators.LocationAddressTranslator;
+import org.openmrs.util.OpenmrsConstants;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LocationAddressTranslatorImpl implements LocationAddressTranslator {
 	
 	private static Log log = LogFactory.getLog(LocationAddressTranslatorImpl.class);
+	
+	@Inject
+	FhirGlobalPropertyService fhirGlobalPropertyService;
 	
 	@Override
 	public Address toFhirResource(Location omrsLocation) {
@@ -56,6 +70,51 @@ public class LocationAddressTranslatorImpl implements LocationAddressTranslator 
 			
 		}
 		return address;
+	}
+	
+	public void format(Location location) {
+		List<String> addressLinesList = new ArrayList<>();
+		AddressTemplate addressTemplate = new AddressTemplate(
+		        fhirGlobalPropertyService.getGlobalProperty(OpenmrsConstants.GLOBAL_PROPERTY_ADDRESS_TEMPLATE));
+		List<List<Map<String, String>>> lines = addressTemplate.getLines();
+		String layoutToken = addressTemplate.getLayoutToken();
+		List<String> lineFormat = addressTemplate.getLineByLineFormat();
+		try {
+			for (List<Map<String, String>> line : lines) {
+				StringBuilder addressLine = new StringBuilder();
+				Boolean hasToken = false;
+				for (Map<String, String> lineToken : line) {
+					if (lineToken.get("isToken").equals(layoutToken)) {
+						String tokenValue = BeanUtils.getProperty(location, lineToken.get("codeName"));
+						if (StringUtils.isNotBlank(tokenValue)) {
+							hasToken = true;
+							addressLine.append(tokenValue);
+							// vv Maybe wrong result when many field in one line like <string>cityVillage stateProvince country postalCode</string>
+							lineFormat.set(lineFormat.indexOf(lineToken.get("codeName")), tokenValue);
+						}
+					} else {
+						addressLine.append(lineToken.get("displayText"));
+					}
+				}
+				String addressLineString = addressLine.toString();
+				if (StringUtils.isNotBlank(addressLineString) && hasToken) {
+					addressLinesList.add(addressLineString);
+				}
+			}
+			
+			Address address = new Address();
+			lineFormat.forEach(address::addLine);
+			address.setText(lineFormat.stream().collect(Collectors.joining("\n")));
+		}
+		catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
