@@ -21,14 +21,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
+import java.util.Calendar;
 import java.util.Collections;
 
+import ca.uhn.fhir.rest.param.DateRangeParam;
+import ca.uhn.fhir.rest.param.QuantityAndListParam;
 import ca.uhn.fhir.rest.param.ReferenceParam;
+import ca.uhn.fhir.rest.param.StringAndListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import ca.uhn.fhir.rest.param.TokenOrListParam;
 import lombok.AccessLevel;
 import lombok.Getter;
+import org.apache.commons.lang.time.DateUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Observation;
 import org.junit.Before;
@@ -50,6 +56,8 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	private static final String BAD_OBS_UUID = "121b73a6-e1a4-4424-8610-d5765bf2fdf7";
 	
 	private static final String PATIENT_UUID = "d9bc6c12-6adc-4ca6-8bde-441ec1a1c344";
+	
+	private static final String MEMBER_UUID = "d9bc6c12-6adc-4ca6-8bde-441ec1a1c344";
 	
 	private static final String CIEL_URN = "urn:oid:2.16.840.1.113883.3.7201";
 	
@@ -78,6 +86,24 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	
 	@Captor
 	private ArgumentCaptor<TokenAndListParam> codeCaptor;
+	
+	@Captor
+	private ArgumentCaptor<ReferenceParam> memberCaptor;
+	
+	@Captor
+	private ArgumentCaptor<TokenAndListParam> valueCodeCaptor;
+	
+	@Captor
+	private ArgumentCaptor<DateRangeParam> dateCaptor;
+	
+	@Captor
+	private ArgumentCaptor<QuantityAndListParam> valueQuantityCaptor;
+	
+	@Captor
+	private ArgumentCaptor<StringAndListParam> stringAndListCaptor;
+	
+	@Captor
+	private ArgumentCaptor<DateRangeParam> valueDateCaptor;
 	
 	@Before
 	@Override
@@ -202,6 +228,23 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	}
 	
 	@Test
+	public void shouldGetObservationsByValueConceptId() throws Exception {
+		verifyUri("/Observation?value-concept=5098");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), valueCodeCaptor.capture(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
+		assertThat(valueCodeCaptor.getValue(), notNullValue());
+		assertThat(valueCodeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
+		assertThat(valueCodeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
+		
+		TokenOrListParam orListParam = valueCodeCaptor.getValue().getValuesAsQueryTokens().get(0);
+		assertThat(orListParam.getValuesAsQueryTokens(), notNullValue());
+		assertThat(orListParam.getValuesAsQueryTokens().size(), equalTo(1));
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getSystem(), nullValue());
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getValue(), equalTo("5098"));
+	}
+	
+	@Test
 	public void shouldGetObservationsByConceptAndSystem() throws Exception {
 		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098");
 		
@@ -238,6 +281,25 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 	}
 	
 	@Test
+	public void shouldGetObservationsByValueConceptsAndSystem() throws Exception {
+		verifyUri("/Observation?value-concept=" + URL_ENCODED_CIEL_URN + "|5098," + URL_ENCODED_CIEL_URN + "|5001");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), valueCodeCaptor.capture(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
+		assertThat(valueCodeCaptor.getValue(), notNullValue());
+		assertThat(valueCodeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
+		assertThat(valueCodeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
+		
+		TokenOrListParam orListParam = valueCodeCaptor.getValue().getValuesAsQueryTokens().get(0);
+		assertThat(orListParam.getValuesAsQueryTokens(), notNullValue());
+		assertThat(orListParam.getValuesAsQueryTokens().size(), equalTo(2));
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getSystem(), equalTo(CIEL_URN));
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getValue(), equalTo("5098"));
+		assertThat(orListParam.getValuesAsQueryTokens().get(1).getSystem(), equalTo(CIEL_URN));
+		assertThat(orListParam.getValuesAsQueryTokens().get(1).getValue(), equalTo("5001"));
+	}
+	
+	@Test
 	public void shouldGetObservationsByPatientAndConcept() throws Exception {
 		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098&subject:Patient=" + PATIENT_UUID);
 		
@@ -259,6 +321,97 @@ public class ObservationFhirResourceProviderWebTest extends BaseFhirResourceProv
 		assertThat(orListParam.getValuesAsQueryTokens().size(), equalTo(1));
 		assertThat(orListParam.getValuesAsQueryTokens().get(0).getSystem(), equalTo(CIEL_URN));
 		assertThat(orListParam.getValuesAsQueryTokens().get(0).getValue(), equalTo("5098"));
+	}
+	
+	@Test
+	public void shouldGetObservationsByMemberAndConcept() throws Exception {
+		verifyUri("/Observation?code=" + URL_ENCODED_CIEL_URN + "|5098&has-member=" + MEMBER_UUID);
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), memberCaptor.capture(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), codeCaptor.capture(), isNull());
+		
+		// verify member parameter
+		assertThat(memberCaptor.getValue(), notNullValue());
+		assertThat(memberCaptor.getValue().getIdPart(), equalTo(MEMBER_UUID));
+		
+		// verify code parameter
+		assertThat(codeCaptor.getValue(), notNullValue());
+		assertThat(codeCaptor.getValue().getValuesAsQueryTokens(), notNullValue());
+		assertThat(codeCaptor.getValue().getValuesAsQueryTokens().size(), equalTo(1));
+		
+		TokenOrListParam orListParam = codeCaptor.getValue().getValuesAsQueryTokens().get(0);
+		assertThat(orListParam.getValuesAsQueryTokens(), notNullValue());
+		assertThat(orListParam.getValuesAsQueryTokens().size(), equalTo(1));
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getSystem(), equalTo(CIEL_URN));
+		assertThat(orListParam.getValuesAsQueryTokens().get(0).getValue(), equalTo("5098"));
+	}
+	
+	@Test
+	public void shouldGetObservationsByMemberCode() throws Exception {
+		verifyUri("/Observation?has-member.code=5098");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), memberCaptor.capture(), isNull(), isNull(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
+		
+		assertThat(memberCaptor.getValue(), notNullValue());
+		assertThat(memberCaptor.getValue().getChain(), equalTo(Observation.SP_CODE));
+		assertThat(memberCaptor.getValue().getValue(), equalTo("5098"));
+	}
+	
+	@Test
+	public void shouldGetObservationsByValueDate() throws Exception {
+		verifyUri("/Observation?value-date=ge1975-02-02");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), valueDateCaptor.capture(),
+		    isNull(), isNull(), isNull(), isNull(), isNull());
+		
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(1975, 1, 2);
+		
+		assertThat(valueDateCaptor.getValue().getLowerBound().getValue(),
+		    equalTo(DateUtils.truncate(calendar.getTime(), Calendar.DATE)));
+		assertThat(valueDateCaptor.getValue().getUpperBound(), nullValue());
+	}
+	
+	@Test
+	public void shouldGetObservationsByValueQuantity() throws Exception {
+		verifyUri("/Observation?value-quantity=134.0");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(),
+		    valueQuantityCaptor.capture(), isNull(), isNull(), isNull(), isNull());
+		
+		assertThat(valueQuantityCaptor.getValue(), notNullValue());
+		assertThat(valueQuantityCaptor.getValue().getValuesAsQueryTokens(), not(empty()));
+		assertThat(valueQuantityCaptor.getValue().getValuesAsQueryTokens().get(0).getValuesAsQueryTokens().get(0).getValue(),
+		    equalTo(BigDecimal.valueOf(134.0)));
+	}
+	
+	@Test
+	public void shouldGetObservationsByValueString() throws Exception {
+		verifyUri("/Observation?value-string=AFH56");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+		    stringAndListCaptor.capture(), isNull(), isNull(), isNull());
+		
+		assertThat(stringAndListCaptor.getValue(), notNullValue());
+		assertThat(stringAndListCaptor.getValue().getValuesAsQueryTokens(), not(empty()));
+		assertThat(stringAndListCaptor.getValue().getValuesAsQueryTokens().get(0).getValuesAsQueryTokens().get(0).getValue(),
+		    equalTo("AFH56"));
+	}
+	
+	@Test
+	public void shouldGetObservationsByDate() throws Exception {
+		verifyUri("/Observation?date=ge1975-02-02");
+		
+		verify(observationService).searchForObservations(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+		    isNull(), dateCaptor.capture(), isNull(), isNull());
+		
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(1975, 1, 2);
+		
+		assertThat(dateCaptor.getValue().getLowerBound().getValue(),
+		    equalTo(DateUtils.truncate(calendar.getTime(), Calendar.DATE)));
+		assertThat(dateCaptor.getValue().getUpperBound(), nullValue());
 	}
 	
 	private void verifyUri(String uri) throws Exception {
